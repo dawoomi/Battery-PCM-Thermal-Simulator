@@ -9,6 +9,7 @@ Generates a thermal camera-style temperature heatmap from the board's 3D model (
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Status](https://img.shields.io/badge/status-active-brightgreen)
 
+![Thermal Analysis](https://raw.githubusercontent.com/electgpl/PCB-Thermal-Simulator/refs/heads/main/Thermal%20Analysis.jpg)
 ---
 
 ## Typical output
