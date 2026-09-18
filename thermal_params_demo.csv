@@ -1,0 +1,10 @@
+Component,Power_W,Theta_JA,Theta_JC,Description
+U1_BuckReg,0.85,38,5.0,Synchronous Buck Regulator 3A
+U2_RFTrx,0.35,45,8.0,Sub-GHz RF Transceiver
+U3_MCU,0.25,52,6.0,ARM Cortex-M4 @ 168MHz
+L1_Inductor,0.4,30,3.75,Power inductor 10uH
+L2_Inductor,0.35,30,3.75,Power inductor 4.7uH
+Q1_MOSFET,0.55,25,3.0,N-Ch MOSFET load switch
+Q2_MOSFET,0.5,25,3.0,N-Ch MOSFET load switch
+U4_LDO,0.2,60,10.0,LDO 3.3V 500mA
+XTAL_32M,0.05,200,25.0,32MHz TCXO Crystal
