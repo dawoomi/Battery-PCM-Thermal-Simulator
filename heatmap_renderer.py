@@ -88,7 +88,7 @@ def render_thermal_map(T: np.ndarray,
         T_max_visual = T_max_data
 
     norm = Normalize(vmin=T_min, vmax=T_max_visual)
-    cmap = plt.cm.get_cmap(cfg.colormap)
+    cmap = plt.get_cmap(cfg.colormap)
 
     # ── Layout de la figura ───────────────────────────────────────────────────
     aspect_pcb = cfg.pcb_width_mm / cfg.pcb_height_mm
