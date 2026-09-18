@@ -311,6 +311,11 @@ def build_power_grid(components: List[ComponentThermal],
         y1 = min(cfg.pcb_height_mm, geom.y_max)
 
         if x1 <= x0 or y1 <= y0:
+            # Preserve declared power even when malformed geometry lies outside the board.
+            ix_c = int(np.clip(geom.cx / dx_mm, 0, cfg.grid_nx - 1))
+            iy_c = int(np.clip(geom.cy / dy_mm, 0, cfg.grid_ny - 1))
+            grid.power_density[iy_c, ix_c] += comp.power_W / cell_area_m2
+            grid.component_mask[iy_c, ix_c] = idx
             continue
 
         # Convertir a índices de grilla (floor para inicio, ceil para fin)
@@ -325,20 +330,30 @@ def build_power_grid(components: List[ComponentThermal],
         iy0 = max(0, min(iy0, cfg.grid_ny - 1))
         iy1 = max(0, min(iy1, cfg.grid_ny))
 
-        n_cells = (ix1 - ix0) * (iy1 - iy0)
+        # Distribute uniform footprint power by exact cell-overlap area.  Assigning
+        # the full footprint density to every floor/ceil-selected cell overcounts
+        # power whenever a footprint boundary cuts through a cell.
+        area_footprint_m2 = (x1 - x0) * (y1 - y0) * 1e-6
+        q_density = comp.power_W / area_footprint_m2  # [W/m²]
 
-        if n_cells == 0:
-            # Sub-grilla: asignar a celda del centroide
-            ix_c = int(np.clip(geom.cx / dx_mm, 0, cfg.grid_nx - 1))
-            iy_c = int(np.clip(geom.cy / dy_mm, 0, cfg.grid_ny - 1))
-            grid.power_density[iy_c, ix_c] += comp.power_W / cell_area_m2
-            grid.component_mask[iy_c, ix_c] = idx
-        else:
-            # Distribuir uniformemente sobre las celdas del footprint
-            area_footprint_m2 = (x1 - x0) * (y1 - y0) * 1e-6
-            q_density = comp.power_W / area_footprint_m2  # [W/m²]
-            grid.power_density[iy0:iy1, ix0:ix1] += q_density
-            grid.component_mask[iy0:iy1, ix0:ix1] = idx
+        for iy in range(iy0, iy1):
+            cell_y0 = iy * dy_mm
+            cell_y1 = cell_y0 + dy_mm
+            overlap_y_mm = max(0.0, min(y1, cell_y1) - max(y0, cell_y0))
+
+            for ix in range(ix0, ix1):
+                cell_x0 = ix * dx_mm
+                cell_x1 = cell_x0 + dx_mm
+                overlap_x_mm = max(0.0, min(x1, cell_x1) - max(x0, cell_x0))
+                overlap_area_m2 = overlap_x_mm * overlap_y_mm * 1e-6
+
+                if overlap_area_m2 <= 0.0:
+                    continue
+
+                grid.power_density[iy, ix] += (
+                    q_density * overlap_area_m2 / cell_area_m2
+                )
+                grid.component_mask[iy, ix] = idx
 
     integrated_power = grid.total_power_W()
     total_input_power = sum(c.power_W for c in components)
